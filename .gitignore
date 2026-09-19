@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+.DS_Store
+*.db
+*.sqlite3
+dist/
+build/
+*.egg-info/
