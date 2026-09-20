@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import DashboardPage from "./features/dashboard/DashboardPage";
 import ProjectsPage from "./features/projects/ProjectsPage";
+import BoqPage from "./features/boq/BoqPage";
 import Sidebar from "./components/Sidebar";
 import ErrorBanner from "./components/ErrorBanner";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -39,6 +40,7 @@ export default function App() {
         {activeTab === "Projects" && (
           <ProjectsPage projects={projects} onProjectsChange={setProjects} />
         )}
+        {activeTab === "BOQ" && <BoqPage projects={projects} />}
       </main>
     </div>
   );
