@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import DashboardPage from "./features/dashboard/DashboardPage";
 import ProjectsPage from "./features/projects/ProjectsPage";
 import BoqPage from "./features/boq/BoqPage";
+import RatesPage from "./features/rates/RatesPage";
 import Sidebar from "./components/Sidebar";
 import ErrorBanner from "./components/ErrorBanner";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -41,6 +42,7 @@ export default function App() {
           <ProjectsPage projects={projects} onProjectsChange={setProjects} />
         )}
         {activeTab === "BOQ" && <BoqPage projects={projects} />}
+        {activeTab === "Rates" && <RatesPage projectsCount={projects.length} />}
       </main>
     </div>
   );
