@@ -2,12 +2,13 @@ from decimal import Decimal
 
 from fastapi import APIRouter
 
-from app.models.estimate import EstimateItem, calculate_total
+from app.models.estimate import EstimateItem
 from app.schemas.estimate import (
     EstimateCalculateRequest,
     EstimateCalculateResponse,
     EstimateItemResult,
 )
+from app.services.calculation import calculate_breakdown
 
 router = APIRouter(prefix="/estimates", tags=["estimates"])
 
@@ -23,28 +24,16 @@ def calculate_estimate(request: EstimateCalculateRequest) -> EstimateCalculateRe
         )
         for item in request.items
     ]
-
     subtotal = sum((item.amount for item in items), Decimal("0"))
-    overhead = subtotal * request.overhead_percent / Decimal("100")
-    profit = (subtotal + overhead) * request.profit_percent / Decimal("100")
-    contingency = (
-        (subtotal + overhead + profit)
-        * request.contingency_percent
-        / Decimal("100")
-    )
-    total = calculate_total(
-        items,
+    breakdown = calculate_breakdown(
+        subtotal,
         request.overhead_percent,
         request.profit_percent,
         request.contingency_percent,
     )
 
     return EstimateCalculateResponse(
-        subtotal=subtotal,
-        overhead=overhead,
-        profit=profit,
-        contingency=contingency,
-        total=total,
+        **breakdown,
         items=[
             EstimateItemResult(
                 description=item.description,
