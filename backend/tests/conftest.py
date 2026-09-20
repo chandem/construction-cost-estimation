@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
+import app.db
 from app.main import app
 
 
@@ -19,7 +20,6 @@ class FakeQuery:
         self.order_field = None
 
     def select(self, *_args):
-        self.operation = "select"
         return self
 
     def insert(self, payload):
@@ -60,6 +60,17 @@ class FakeQuery:
                 row = dict(payload)
                 row.setdefault("id", f"{self.table_name}-{len(rows) + 1}")
                 row.setdefault("created_at", "2026-01-01T00:00:00Z")
+                row.setdefault("updated_at", "2026-01-01T00:00:00Z")
+                if self.table_name == "boq_items":
+                    from decimal import Decimal
+                    row["amount"] = (Decimal(str(row["quantity"])) * Decimal(str(row["unit_rate"]))).quantize(Decimal("0.01"))
+                if self.table_name == "rate_analysis_components":
+                    from decimal import Decimal
+                    row["amount"] = (
+                        Decimal(str(row["quantity"]))
+                        * (Decimal("1") + Decimal(str(row["waste_percent"])) / Decimal("100"))
+                        * Decimal(str(row["unit_rate_snapshot"]))
+                    ).quantize(Decimal("0.01"))
                 rows.append(row)
                 inserted.append(row)
             return FakeResponse(inserted)
@@ -70,7 +81,8 @@ class FakeQuery:
             for row in matched:
                 row.update(self.payload)
                 if self.table_name == "boq_items":
-                    row["amount"] = str(float(row["quantity"]) * float(row["unit_rate"]))
+                    from decimal import Decimal
+                    row["amount"] = (Decimal(str(row["quantity"])) * Decimal(str(row["unit_rate"]))).quantize(Decimal("0.01"))
             return FakeResponse(matched)
 
         if self.operation == "delete":
@@ -103,7 +115,6 @@ class FakeSupabase:
 @pytest.fixture
 def fake_supabase():
     client = FakeSupabase()
-    import app.db
     original = app.db.get_supabase
     app.db.get_supabase = lambda: client
     yield client
