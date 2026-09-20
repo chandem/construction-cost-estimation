@@ -1,12 +1,5 @@
-from fastapi.testclient import TestClient
-
-from app.main import app
-
-client = TestClient(app)
-
-
-def test_boq_crud() -> None:
-    project_id = "test-project-boq"
+def test_boq_crud(client) -> None:
+    project_id = "project-1"
 
     created = client.post(
         f"/projects/{project_id}/boq",
