@@ -1,16 +1,16 @@
 import pytest
 from fastapi.testclient import TestClient
 
-import app.db
-import app.api.boq
-import app.api.categories
-import app.api.estimate_versions
-import app.api.exports
-import app.api.pdf_export
-import app.api.projects
-import app.api.rate_analysis
-import app.api.rates
-import app.api.summary
+import app.db as db_module
+import app.api.boq as boq_module
+import app.api.categories as categories_module
+import app.api.estimate_versions as estimate_versions_module
+import app.api.exports as exports_module
+import app.api.pdf_export as pdf_export_module
+import app.api.projects as projects_module
+import app.api.rate_analysis as rate_analysis_module
+import app.api.rates as rates_module
+import app.api.summary as summary_module
 from app.main import app
 
 
@@ -149,16 +149,16 @@ class FakeSupabase:
 def fake_supabase():
     client = FakeSupabase()
     modules = [
-        app.db,
-        app.api.projects,
-        app.api.boq,
-        app.api.categories,
-        app.api.rates,
-        app.api.rate_analysis,
-        app.api.summary,
-        app.api.estimate_versions,
-        app.api.exports,
-        app.api.pdf_export,
+        db_module,
+        projects_module,
+        boq_module,
+        categories_module,
+        rates_module,
+        rate_analysis_module,
+        summary_module,
+        estimate_versions_module,
+        exports_module,
+        pdf_export_module,
     ]
     originals = [(module, module.get_supabase) for module in modules]
     for module, _ in originals:
