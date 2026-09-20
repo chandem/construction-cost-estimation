@@ -9,6 +9,7 @@ class BOQItemCreate(BaseModel):
     unit: str = Field(min_length=1)
     quantity: Decimal = Field(gt=0)
     unit_rate: Decimal = Field(ge=0)
+    rate_analysis_id: str | None = None
 
 
 class BOQItemResponse(BOQItemCreate):
