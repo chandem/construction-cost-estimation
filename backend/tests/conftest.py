@@ -1,16 +1,16 @@
 import pytest
 from fastapi.testclient import TestClient
 
-import app.db
-import app.api.boq
-import app.api.categories
-import app.api.estimate_versions
-import app.api.exports
-import app.api.pdf_export
-import app.api.projects
-import app.api.rate_analysis
-import app.api.rates
-import app.api.summary
+import app.db as db_module
+import app.api.boq as boq_module
+import app.api.categories as categories_module
+import app.api.estimate_versions as estimate_versions_module
+import app.api.exports as exports_module
+import app.api.pdf_export as pdf_export_module
+import app.api.projects as projects_module
+import app.api.rate_analysis as rate_analysis_module
+import app.api.rates as rates_module
+import app.api.summary as summary_module
 from app.main import app
 
 
@@ -84,21 +84,13 @@ class FakeQuery:
                 row.setdefault("updated_at", "2026-01-01T00:00:00Z")
                 if self.table_name == "boq_items":
                     from decimal import Decimal
-                    row["amount"] = (
-                        Decimal(str(row["quantity"])) * Decimal(str(row["unit_rate"]))
-                    ).quantize(Decimal("0.01"))
+                    row["amount"] = (Decimal(str(row["quantity"])) * Decimal(str(row["unit_rate"]))).quantize(Decimal("0.01"))
                 if self.table_name == "rate_analysis_components":
                     from decimal import Decimal
-                    row["amount"] = (
-                        Decimal(str(row["quantity"]))
-                        * (Decimal("1") + Decimal(str(row["waste_percent"])) / Decimal("100"))
-                        * Decimal(str(row["unit_rate_snapshot"]))
-                    ).quantize(Decimal("0.01"))
+                    row["amount"] = (Decimal(str(row["quantity"])) * (Decimal("1") + Decimal(str(row["waste_percent"])) / Decimal("100")) * Decimal(str(row["unit_rate_snapshot"]))).quantize(Decimal("0.01"))
                 if self.table_name == "estimate_version_items":
                     from decimal import Decimal
-                    row["amount"] = (
-                        Decimal(str(row["quantity"])) * Decimal(str(row["unit_rate"]))
-                    ).quantize(Decimal("0.01"))
+                    row["amount"] = (Decimal(str(row["quantity"])) * Decimal(str(row["unit_rate"]))).quantize(Decimal("0.01"))
                 rows.append(row)
                 inserted.append(row)
             return FakeResponse(inserted)
@@ -110,9 +102,7 @@ class FakeQuery:
                 row.update(self.payload)
                 if self.table_name == "boq_items":
                     from decimal import Decimal
-                    row["amount"] = (
-                        Decimal(str(row["quantity"])) * Decimal(str(row["unit_rate"]))
-                    ).quantize(Decimal("0.01"))
+                    row["amount"] = (Decimal(str(row["quantity"])) * Decimal(str(row["unit_rate"]))).quantize(Decimal("0.01"))
             return FakeResponse(matched)
 
         if self.operation == "delete":
@@ -120,10 +110,7 @@ class FakeQuery:
             return FakeResponse(matched)
 
         if self.order_field:
-            matched.sort(
-                key=lambda row: row.get(self.order_field) or "",
-                reverse=self.order_desc,
-            )
+            matched.sort(key=lambda row: row.get(self.order_field) or "", reverse=self.order_desc)
         return FakeResponse(matched)
 
 
@@ -149,16 +136,16 @@ class FakeSupabase:
 def fake_supabase():
     client = FakeSupabase()
     modules = [
-        app.db,
-        app.api.projects,
-        app.api.boq,
-        app.api.categories,
-        app.api.rates,
-        app.api.rate_analysis,
-        app.api.summary,
-        app.api.estimate_versions,
-        app.api.exports,
-        app.api.pdf_export,
+        db_module,
+        projects_module,
+        boq_module,
+        categories_module,
+        rates_module,
+        rate_analysis_module,
+        summary_module,
+        estimate_versions_module,
+        exports_module,
+        pdf_export_module,
     ]
     originals = [(module, module.get_supabase) for module in modules]
     for module, _ in originals:
