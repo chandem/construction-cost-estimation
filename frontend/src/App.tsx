@@ -3,6 +3,7 @@ import DashboardPage from "./features/dashboard/DashboardPage";
 import ProjectsPage from "./features/projects/ProjectsPage";
 import BoqPage from "./features/boq/BoqPage";
 import RatesPage from "./features/rates/RatesPage";
+import SummaryPage from "./features/summary/SummaryPage";
 import Sidebar from "./components/Sidebar";
 import ErrorBanner from "./components/ErrorBanner";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -43,6 +44,7 @@ export default function App() {
         )}
         {activeTab === "BOQ" && <BoqPage projects={projects} />}
         {activeTab === "Rates" && <RatesPage projectsCount={projects.length} />}
+        {activeTab === "Summary" && <SummaryPage projects={projects} />}
       </main>
     </div>
   );
