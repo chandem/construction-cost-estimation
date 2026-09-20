@@ -5,6 +5,7 @@ from app.api.categories import router as categories_router
 from app.api.estimates import router as estimates_router
 from app.api.estimate_versions import router as estimate_versions_router
 from app.api.exports import router as exports_router
+from app.api.pdf_export import router as pdf_export_router
 from app.api.projects import router as projects_router
 from app.api.rate_analysis import router as rate_analysis_router
 from app.api.rates import router as rates_router
@@ -12,7 +13,7 @@ from app.api.summary import router as summary_router
 
 app = FastAPI(
     title="Construction Cost Estimation API",
-    version="0.7.0",
+    version="0.8.0",
     description="API for construction quantity takeoff, BOQ, cost rates, rate analysis, summaries, estimate versions and exports.",
 )
 
@@ -31,3 +32,4 @@ app.include_router(rate_analysis_router)
 app.include_router(summary_router)
 app.include_router(estimate_versions_router)
 app.include_router(exports_router)
+app.include_router(pdf_export_router)
