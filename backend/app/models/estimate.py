@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
+from app.services.calculation import calculate_breakdown
+
 
 @dataclass
 class EstimateItem:
@@ -21,7 +23,9 @@ def calculate_total(
     contingency_percent: Decimal = Decimal("0"),
 ) -> Decimal:
     subtotal = sum((item.amount for item in items), Decimal("0"))
-    overhead = subtotal * overhead_percent / Decimal("100")
-    profit = (subtotal + overhead) * profit_percent / Decimal("100")
-    contingency = (subtotal + overhead + profit) * contingency_percent / Decimal("100")
-    return subtotal + overhead + profit + contingency
+    return calculate_breakdown(
+        subtotal,
+        overhead_percent,
+        profit_percent,
+        contingency_percent,
+    )["total"]
