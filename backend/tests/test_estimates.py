@@ -32,8 +32,8 @@ def test_calculate_estimate() -> None:
 
     assert response.status_code == 200
     data = response.json()
-    assert data["subtotal"] == "40000"
-    assert data["overhead"] == "4000"
-    assert data["profit"] == "2200"
-    assert data["contingency"] == "1386"
-    assert data["total"] == "47586"
+    assert data["subtotal"] == "40000.00"
+    assert data["overhead"] == "4000.00"
+    assert data["profit"] == "2200.00"
+    assert data["contingency"] == "1386.00"
+    assert data["total"] == "47586.00"
