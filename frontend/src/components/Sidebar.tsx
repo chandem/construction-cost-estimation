@@ -3,6 +3,7 @@ import {
   FolderKanban,
   ClipboardList,
   CircleDollarSign,
+  Layers,
   BarChart3,
 } from "lucide-react";
 
@@ -16,6 +17,7 @@ const tabs = [
   { id: "Projects", label: "Projects", icon: FolderKanban },
   { id: "BOQ", label: "Bill of Quantities", icon: ClipboardList },
   { id: "Rates", label: "Cost Rates", icon: CircleDollarSign },
+  { id: "RateAnalysis", label: "Rate Analysis", icon: Layers },
   { id: "Summary", label: "Summary", icon: BarChart3 },
 ];
 
