@@ -1,83 +1,113 @@
-import { FolderKanban, ClipboardList, CircleDollarSign, BarChart3 } from "lucide-react";
+import {
+  FolderKanban,
+  ClipboardList,
+  CircleDollarSign,
+  History,
+  ArrowRight,
+} from "lucide-react";
+import { useApp } from "../../context/AppContext";
 
-type DashboardPageProps = {
-  projectsCount: number;
+type Props = {
+  onNavigate: (tab: string) => void;
 };
 
-export default function DashboardPage({ projectsCount }: DashboardPageProps) {
+export default function DashboardPage({ onNavigate }: Props) {
+  const { projects, selectedProject } = useApp();
+
   return (
     <div className="stack">
       <section className="hero">
         <div>
-          <div className="eyebrow">CONSTRUCTION COST ESTIMATION</div>
-          <h2>Build accurate BOQs and unit-rate estimates for Ethiopian projects</h2>
+          <div className="eyebrow" style={{ color: "#93c5fd" }}>CONSTRUCTION COST ESTIMATION</div>
+          <h2>Professional BOQ and rate analysis for Ethiopian projects</h2>
           <p className="muted">
-            Create projects, enter quantities, apply material/labor rates or rate analyses,
-            then generate versioned cost summaries with overhead, profit and contingency.
+            Create projects, build unit rates and rate analyses, enter quantities,
+            then publish versioned estimates with overhead, profit and contingency.
           </p>
         </div>
-        <button type="button" className="primary">
-          New project
+        <button type="button" className="primary" onClick={() => onNavigate("Projects")}>
+          Manage projects <ArrowRight size={16} />
         </button>
       </section>
 
       <div className="cards">
         <div className="card">
           <div className="cardIcon">
-            <FolderKanban size={19} />
+            <FolderKanban size={18} />
           </div>
           <div>
             <span>Projects</span>
-            <strong>{projectsCount}</strong>
+            <strong>{projects.length}</strong>
           </div>
         </div>
         <div className="card">
           <div className="cardIcon">
-            <ClipboardList size={19} />
+            <ClipboardList size={18} />
           </div>
           <div>
-            <span>BOQ items</span>
-            <strong>—</strong>
+            <span>Active project</span>
+            <strong style={{ fontSize: 15 }}>{selectedProject?.name || "None"}</strong>
           </div>
         </div>
         <div className="card">
           <div className="cardIcon">
-            <CircleDollarSign size={19} />
+            <CircleDollarSign size={18} />
           </div>
           <div>
-            <span>Cost rates</span>
-            <strong>—</strong>
+            <span>Currency</span>
+            <strong>{selectedProject?.currency || "ETB"}</strong>
           </div>
         </div>
         <div className="card">
           <div className="cardIcon">
-            <BarChart3 size={19} />
+            <History size={18} />
           </div>
           <div>
-            <span>Estimate versions</span>
-            <strong>—</strong>
+            <span>Workflow</span>
+            <strong style={{ fontSize: 15 }}>Rates → BOQ → Version</strong>
           </div>
         </div>
       </div>
 
       <div className="grid">
         <section className="panel">
-          <h3>Quick workflow</h3>
+          <h3>Recommended workflow</h3>
           <ol>
-            <li>Create a project (location, client, currency)</li>
-            <li>Add cost categories and unit rates</li>
-            <li>Build rate analyses with waste factors</li>
-            <li>Enter BOQ sections and quantities</li>
-            <li>Generate estimate versions with markups</li>
+            <li>Create a project with location and client</li>
+            <li>Add cost categories (Material, Labor, Equipment)</li>
+            <li>Enter unit rates, then build rate analyses with waste</li>
+            <li>Enter BOQ items (optionally linked to rate analyses)</li>
+            <li>Create an estimate version for tender submission</li>
+            <li>Export BOQ to Excel or PDF</li>
           </ol>
         </section>
         <section className="panel">
-          <h3>Next steps</h3>
+          <h3>Quick actions</h3>
           <div className="actions">
-            <button type="button">Manage projects</button>
-            <button type="button">Enter BOQ items</button>
-            <button type="button">Add cost rates</button>
-            <button type="button">View summary</button>
+            <button type="button" onClick={() => onNavigate("Projects")}>
+              Projects
+            </button>
+            <button type="button" onClick={() => onNavigate("Categories")}>
+              Categories
+            </button>
+            <button type="button" onClick={() => onNavigate("Rates")}>
+              Cost rates
+            </button>
+            <button type="button" onClick={() => onNavigate("RateAnalysis")}>
+              Rate analysis
+            </button>
+            <button type="button" onClick={() => onNavigate("BOQ")}>
+              Bill of quantities
+            </button>
+            <button type="button" onClick={() => onNavigate("Versions")}>
+              Estimate versions
+            </button>
+            <button type="button" onClick={() => onNavigate("Summary")}>
+              Summary
+            </button>
+            <button type="button" onClick={() => onNavigate("BOQ")}>
+              Export BOQ
+            </button>
           </div>
         </section>
       </div>
