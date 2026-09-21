@@ -4,6 +4,7 @@ import {
   ClipboardList,
   CircleDollarSign,
   Layers,
+  History,
   BarChart3,
 } from "lucide-react";
 
@@ -18,6 +19,7 @@ const tabs = [
   { id: "BOQ", label: "Bill of Quantities", icon: ClipboardList },
   { id: "Rates", label: "Cost Rates", icon: CircleDollarSign },
   { id: "RateAnalysis", label: "Rate Analysis", icon: Layers },
+  { id: "Versions", label: "Estimate Versions", icon: History },
   { id: "Summary", label: "Summary", icon: BarChart3 },
 ];
 
