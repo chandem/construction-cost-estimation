@@ -1,29 +1,21 @@
 import { useState } from "react";
 import { Plus, FolderKanban } from "lucide-react";
-import { createProject, type Project } from "../../api/projects";
+import { createProject } from "../../api/projects";
+import { useApp } from "../../context/AppContext";
 
-type ProjectsPageProps = {
-  projects: Project[];
-  onProjectsChange: (projects: Project[]) => void;
-};
-
-export default function ProjectsPage({
-  projects,
-  onProjectsChange,
-}: ProjectsPageProps) {
+export default function ProjectsPage() {
+  const { projects, setProjects, setSelectedProjectId, pushToast } = useApp();
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [clientName, setClientName] = useState("");
   const [description, setDescription] = useState("");
   const [currency, setCurrency] = useState("ETB");
-  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
   async function handleCreate() {
     if (!name.trim()) return;
     setSaving(true);
-    setError("");
     try {
       const created = await createProject({
         name: name.trim(),
@@ -32,15 +24,17 @@ export default function ProjectsPage({
         description: description.trim() || null,
         currency,
       });
-      onProjectsChange([...projects, created]);
+      setProjects([...projects, created]);
+      setSelectedProjectId(created.id);
       setName("");
       setLocation("");
       setClientName("");
       setDescription("");
       setCurrency("ETB");
       setShowForm(false);
+      pushToast("success", `Project “${created.name}” created`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create project");
+      pushToast("error", err instanceof Error ? err.message : "Failed to create project");
     } finally {
       setSaving(false);
     }
@@ -51,19 +45,13 @@ export default function ProjectsPage({
       <div className="pageBar">
         <div>
           <h2>Projects</h2>
-          <p className="muted">Manage construction projects and their estimates.</p>
+          <p className="muted">Manage construction projects and switch the active estimate context.</p>
         </div>
-        <button
-          type="button"
-          className="primary"
-          onClick={() => setShowForm((v) => !v)}
-        >
+        <button type="button" className="primary" onClick={() => setShowForm((v) => !v)}>
           <Plus size={16} />
           {showForm ? "Cancel" : "New project"}
         </button>
       </div>
-
-      {error && <div className="error">{error}</div>}
 
       {showForm && (
         <section className="panel form">
@@ -71,43 +59,23 @@ export default function ProjectsPage({
           <div className="formGrid">
             <label>
               Project name *
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Bole Residential Building"
-              />
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Bole Residential Building" />
             </label>
             <label>
               Location
-              <input
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Addis Ababa"
-              />
+              <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Addis Ababa" />
             </label>
             <label>
               Client
-              <input
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                placeholder="Client name"
-              />
+              <input value={clientName} onChange={(e) => setClientName(e.target.value)} />
             </label>
             <label>
               Currency
-              <input
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value.toUpperCase())}
-                maxLength={3}
-              />
+              <input value={currency} onChange={(e) => setCurrency(e.target.value.toUpperCase())} maxLength={3} />
             </label>
             <label className="wide">
               Description
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Short project description"
-              />
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
             </label>
           </div>
           <div className="formActions">
@@ -117,10 +85,10 @@ export default function ProjectsPage({
             <button
               type="button"
               className="primary"
-              onClick={() => void handleCreate()}
               disabled={saving || !name.trim()}
+              onClick={() => void handleCreate()}
             >
-              {saving ? "Creating..." : "Create project"}
+              {saving ? "Creating…" : "Create project"}
             </button>
           </div>
         </section>
@@ -146,6 +114,7 @@ export default function ProjectsPage({
                   <th>Location</th>
                   <th>Client</th>
                   <th>Currency</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -157,6 +126,18 @@ export default function ProjectsPage({
                     <td>{project.location || "—"}</td>
                     <td>{project.client_name || "—"}</td>
                     <td>{project.currency}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => {
+                          setSelectedProjectId(project.id);
+                          pushToast("info", `Active project: ${project.name}`);
+                        }}
+                      >
+                        Set active
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
