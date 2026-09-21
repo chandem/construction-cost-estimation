@@ -20,7 +20,7 @@ app = FastAPI(
     description="API for construction quantity takeoff, BOQ, cost rates, rate analysis, summaries, estimate versions and exports.",
 )
 
-# Allow Vercel (and local) frontends to call the API
+# Explicit origins (local + any extra from env)
 _default_origins = [
     "http://localhost:5173",
     "http://localhost:3000",
@@ -31,7 +31,9 @@ _origins = _default_origins + [o.strip() for o in _extra.split(",") if o.strip()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_origins or ["*"],
+    allow_origins=_origins,
+    # Any Vercel production or preview deployment
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
