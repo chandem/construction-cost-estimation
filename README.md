@@ -1,58 +1,49 @@
 # Construction Cost Estimation
 
-A web-based construction estimating system for **quantity takeoff, unit-rate analysis, BOQ generation, and total project cost estimation**.
-
-## Vision
-
-Build a practical estimator that can start with manual quantities and rates, then grow into an Ethiopia-focused professional estimating platform with versioned cost data, reusable rate analysis, Excel/PDF exports, dashboards, and AI-assisted estimation.
+A web-based construction estimating system for **quantity takeoff, unit-rate analysis, BOQ generation, and total project cost estimation** — built for practical use on Ethiopian projects (ETB, regional rates).
 
 ## Core workflow
 
-`Project → Sections → Quantity takeoff → Unit rates / Rate analysis → Amount → BOQ → Estimate version (with markups) → Total cost`
+`Project → Categories & Rates → Rate analysis → BOQ sections & items → Estimate version → Summary / Export`
 
-## Repository structure
+## Status — **v0.9**
 
-```text
-construction-cost-estimation/
-├── backend/        # FastAPI API (v0.8.0)
-├── frontend/       # React + Vite (deployable on Vercel)
-├── database/       # PostgreSQL / Supabase schema
-├── Dockerfile      # Backend container image
-├── render.yaml     # Optional Render.com blueprint
-├── requirements.txt
-└── README.md
-```
+### Backend (FastAPI 0.9.0)
+- Projects CRUD (create, list, get, update, delete)
+- Cost categories & unit rates
+- Rate analysis with components + waste
+- BOQ sections & items (linked rates)
+- Estimate versions (frozen snapshots + markups)
+- Project summary by section
+- Excel & PDF BOQ export
+- **Dashboard stats** (`GET /dashboard/stats`)
+- **Ethiopia seed data** (`POST /seed/ethiopia-defaults`)
+- Rich `/health` (version + Supabase config flag)
+- CORS for local + `*.vercel.app`
 
-## Current status
+### Frontend (React + Vite)
+- App context (active project, toasts)
+- Dashboard with live stats + seed button
+- Projects, Categories, Rates, Rate Analysis
+- BOQ with sections, filters, delete, Excel/PDF export
+- Estimate Versions & Summary
+- Mobile-friendly sidebar
 
-**Phase 2/3 — Estimating engine & professional features (in progress)**
-
-### Implemented
-- FastAPI backend: projects, BOQ, cost rates, rate analysis, estimate versions, summary, Excel/PDF exports
-- React frontend: Dashboard, Projects, BOQ, Rates, Rate Analysis, Summary
-- Full database schema for Supabase/PostgreSQL
-- CORS for cross-origin frontend
-- Docker + Render config for API deployment
-- Vercel-ready frontend (`frontend/vercel.json`)
-
-### Still planned
-- BOQ sections UI polish
-- Estimate versions UI
-- Ethiopia regional cost libraries
-- Authentication & multi-user sharing
-- Drawing-assisted takeoff / AI assist
+### Infrastructure
+- Supabase / PostgreSQL schema
+- Docker + Render blueprint
+- Vercel-ready frontend
 
 ---
 
 ## Deploy
 
 ### 1. Database (Supabase)
+1. Create a project  
+2. Run `database/schema.sql` in the SQL editor  
+3. Copy **Project URL** and **service_role** key  
 
-1. Create a Supabase project
-2. Run `database/schema.sql` in the SQL editor
-3. Copy **Project URL** and **service_role** key
-
-### 2. Backend API (Render / Railway / any Docker host)
+### 2. Backend (Render / Docker)
 
 ```bash
 docker build -t construction-cost-api .
@@ -63,44 +54,50 @@ docker run -p 8000:8000 \
   construction-cost-api
 ```
 
-On **Render**: New Web Service → Docker → set the three env vars above. Health check: `/health`.
+Health: `GET /health` → `{"status":"ok","version":"0.9.0",...}`
 
 ### 3. Frontend (Vercel)
+- Root Directory: `frontend`  
+- Build: `npm run build` · Output: `dist`  
+- Env: `VITE_API_BASE_URL=https://your-api.onrender.com`  
 
-1. Import `chandem/construction-cost-estimation`
-2. **Root Directory:** `frontend`
-3. Framework: Vite · Build: `npm run build` · Output: `dist`
-4. Env var:
-   ```
-   VITE_API_BASE_URL=https://your-api.onrender.com
-   ```
-5. Deploy, then set `CORS_ORIGINS` on the API to your `*.vercel.app` URL and redeploy the API if needed.
+### 4. First-run data
+From the **Dashboard**, click **Seed Ethiopia sample rates**, or:
+
+```bash
+curl -X POST https://your-api.onrender.com/seed/ethiopia-defaults
+```
+
+Sample rates are illustrative — update to current market prices before tender use.
 
 ---
 
 ## Local development
 
-**Backend**
-
 ```bash
+# API
 pip install -r requirements.txt
 export SUPABASE_URL=...
 export SUPABASE_SERVICE_ROLE_KEY=...
 uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000
-```
 
-**Frontend**
+# UI
+cd frontend && npm install && npm run dev
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Optional: `VITE_API_BASE_URL=http://localhost:8000`
-
-**Tests**
-
-```bash
+# Tests
 pytest backend/tests
 ```
+
+## API highlights
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/health` | Liveness + config |
+| GET | `/dashboard/stats` | Overview metrics |
+| POST | `/seed/ethiopia-defaults` | Categories + sample rates |
+| CRUD | `/projects` | Projects |
+| * | `/projects/{id}/boq` | Sections & items |
+| * | `/rates`, `/rate-analyses` | Cost data |
+| POST | `/projects/{id}/summary` | Marked-up totals |
+| GET | `/projects/{id}/exports/boq.xlsx` | Excel |
+| GET | `/projects/{id}/exports/boq.pdf` | PDF |
