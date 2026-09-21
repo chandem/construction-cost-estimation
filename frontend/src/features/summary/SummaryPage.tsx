@@ -1,29 +1,18 @@
 import { useEffect, useState } from "react";
 import { BarChart3 } from "lucide-react";
 import { getProjectSummary, type ProjectSummary } from "../../api/summary";
-import { type Project } from "../../api/projects";
+import ProjectSelect from "../../components/ProjectSelect";
+import { useApp } from "../../context/AppContext";
+import { fmtMoney, fmtNum } from "../../lib/format";
 
-type SummaryPageProps = {
-  projects: Project[];
-};
-
-export default function SummaryPage({ projects }: SummaryPageProps) {
-  const [selectedProjectId, setSelectedProjectId] = useState(
-    projects[0]?.id ?? "",
-  );
+export default function SummaryPage() {
+  const { selectedProjectId, selectedProject } = useApp();
   const [summary, setSummary] = useState<ProjectSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
   const [overhead, setOverhead] = useState("10");
   const [profit, setProfit] = useState("5");
   const [contingency, setContingency] = useState("3");
-
-  useEffect(() => {
-    if (projects.length > 0 && !selectedProjectId) {
-      setSelectedProjectId(projects[0].id);
-    }
-  }, [projects, selectedProjectId]);
 
   useEffect(() => {
     if (!selectedProjectId) {
@@ -31,9 +20,11 @@ export default function SummaryPage({ projects }: SummaryPageProps) {
       return;
     }
     void loadSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjectId, overhead, profit, contingency]);
 
   async function loadSummary() {
+    if (!selectedProjectId) return;
     setLoading(true);
     setError("");
     try {
@@ -51,39 +42,16 @@ export default function SummaryPage({ projects }: SummaryPageProps) {
     }
   }
 
-  const fmt = (n: number) =>
-    n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const currency = selectedProject?.currency || "ETB";
 
   return (
     <div className="stack">
       <div className="pageBar">
         <div>
-          <h2>Cost Summary</h2>
-          <p className="muted">
-            Direct cost plus overhead, profit and contingency for the selected project.
-          </p>
+          <h2>Cost summary</h2>
+          <p className="muted">Live direct cost plus adjustable markups for the active project.</p>
         </div>
-        <select
-          value={selectedProjectId}
-          onChange={(e) => setSelectedProjectId(e.target.value)}
-          style={{
-            padding: "10px 12px",
-            borderRadius: 9,
-            border: "1px solid #d1d5db",
-            font: "inherit",
-            minWidth: 220,
-          }}
-        >
-          {projects.length === 0 ? (
-            <option value="">No projects</option>
-          ) : (
-            projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))
-          )}
-        </select>
+        <ProjectSelect />
       </div>
 
       {error && <div className="error">{error}</div>}
@@ -93,23 +61,11 @@ export default function SummaryPage({ projects }: SummaryPageProps) {
         <div className="formGrid">
           <label>
             Overhead
-            <input
-              type="number"
-              min={0}
-              step="0.1"
-              value={overhead}
-              onChange={(e) => setOverhead(e.target.value)}
-            />
+            <input type="number" min={0} step="0.1" value={overhead} onChange={(e) => setOverhead(e.target.value)} />
           </label>
           <label>
             Profit
-            <input
-              type="number"
-              min={0}
-              step="0.1"
-              value={profit}
-              onChange={(e) => setProfit(e.target.value)}
-            />
+            <input type="number" min={0} step="0.1" value={profit} onChange={(e) => setProfit(e.target.value)} />
           </label>
           <label>
             Contingency
@@ -130,40 +86,40 @@ export default function SummaryPage({ projects }: SummaryPageProps) {
           <strong>No project selected</strong>
         </div>
       ) : loading ? (
-        <div className="emptySmall">Loading summary...</div>
+        <div className="emptySmall">Loading summary…</div>
       ) : summary ? (
         <>
           <div className="cards">
             <div className="card">
               <div>
                 <span>Direct cost</span>
-                <strong>{fmt(summary.direct_cost)}</strong>
+                <strong>{fmtNum(summary.direct_cost)}</strong>
               </div>
             </div>
             <div className="card">
               <div>
                 <span>Overhead</span>
-                <strong>{fmt(summary.overhead)}</strong>
+                <strong>{fmtNum(summary.overhead)}</strong>
               </div>
             </div>
             <div className="card">
               <div>
                 <span>Profit</span>
-                <strong>{fmt(summary.profit)}</strong>
+                <strong>{fmtNum(summary.profit)}</strong>
               </div>
             </div>
             <div className="card">
               <div>
                 <span>Contingency</span>
-                <strong>{fmt(summary.contingency)}</strong>
+                <strong>{fmtNum(summary.contingency)}</strong>
               </div>
             </div>
           </div>
 
           <section className="panel">
             <h3>Grand total</h3>
-            <p style={{ fontSize: 32, fontWeight: 800, margin: "8px 0 0" }}>
-              {fmt(summary.grand_total)} ETB
+            <p style={{ fontSize: 32, fontWeight: 800, margin: "8px 0 0", letterSpacing: "-0.03em" }}>
+              {fmtMoney(summary.grand_total, currency)}
             </p>
             <p className="muted">{summary.item_count} BOQ items included</p>
           </section>
@@ -177,8 +133,8 @@ export default function SummaryPage({ projects }: SummaryPageProps) {
                 <thead>
                   <tr>
                     <th>Section</th>
-                    <th>Items</th>
-                    <th>Subtotal</th>
+                    <th className="num">Items</th>
+                    <th className="num">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -190,8 +146,8 @@ export default function SummaryPage({ projects }: SummaryPageProps) {
                     summary.sections.map((section) => (
                       <tr key={section.section_id ?? section.section_name}>
                         <td>{section.section_name}</td>
-                        <td>{section.item_count}</td>
-                        <td>{fmt(section.subtotal)}</td>
+                        <td className="num">{section.item_count}</td>
+                        <td className="num money">{fmtNum(section.subtotal)}</td>
                       </tr>
                     ))
                   )}
