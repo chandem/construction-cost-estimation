@@ -1,5 +1,6 @@
 const configuredApiBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
-const API_BASE_URL = configuredApiBaseUrl?.replace(/\/$/, "") || "http://localhost:8000";
+export const API_BASE_URL =
+  configuredApiBaseUrl?.replace(/\/$/, "") || "http://localhost:8000";
 const isProduction = Boolean(import.meta.env.PROD);
 
 function getApiConfigurationError(): Error | null {
@@ -8,7 +9,6 @@ function getApiConfigurationError(): Error | null {
       "API URL is not configured. Set VITE_API_BASE_URL in the frontend deployment environment and redeploy.",
     );
   }
-
   return null;
 }
 
@@ -44,5 +44,11 @@ export async function apiFetch<T>(
     throw new Error(errorBody || `Request failed (${response.status})`);
   }
 
-  return response.json() as Promise<T>;
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  const text = await response.text();
+  if (!text) return undefined as T;
+  return JSON.parse(text) as T;
 }
