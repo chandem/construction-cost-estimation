@@ -6,8 +6,9 @@ React + Vite + TypeScript UI for the Construction Cost Estimation system.
 
 - **Dashboard** – overview and workflow guidance
 - **Projects** – create and list projects
-- **BOQ** – quantity takeoff items
+- **BOQ** – quantity takeoff items (manual rate or from rate analysis)
 - **Rates** – material / labor / equipment unit rates
+- **Rate Analysis** – composite rates built from components + waste
 - **Summary** – direct cost + overhead / profit / contingency
 
 ## Run
