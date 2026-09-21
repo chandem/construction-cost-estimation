@@ -3,6 +3,7 @@ import DashboardPage from "./features/dashboard/DashboardPage";
 import ProjectsPage from "./features/projects/ProjectsPage";
 import BoqPage from "./features/boq/BoqPage";
 import RatesPage from "./features/rates/RatesPage";
+import RateAnalysisPage from "./features/rateAnalysis/RateAnalysisPage";
 import SummaryPage from "./features/summary/SummaryPage";
 import Sidebar from "./components/Sidebar";
 import ErrorBanner from "./components/ErrorBanner";
@@ -14,6 +15,7 @@ const pageTitles: Record<string, { title: string; eyebrow: string }> = {
   Projects: { title: "Projects", eyebrow: "PROJECT MANAGEMENT" },
   BOQ: { title: "Bill of Quantities", eyebrow: "QUANTITY TAKEOFF" },
   Rates: { title: "Cost Rates", eyebrow: "UNIT RATES" },
+  RateAnalysis: { title: "Rate Analysis", eyebrow: "COMPOSITE RATES" },
   Summary: { title: "Cost Summary", eyebrow: "ESTIMATE TOTALS" },
 };
 
@@ -68,6 +70,7 @@ export default function App() {
           )}
           {activeTab === "BOQ" && <BoqPage projects={projects} />}
           {activeTab === "Rates" && <RatesPage projectsCount={projects.length} />}
+          {activeTab === "RateAnalysis" && <RateAnalysisPage />}
           {activeTab === "Summary" && <SummaryPage projects={projects} />}
         </div>
       </main>
