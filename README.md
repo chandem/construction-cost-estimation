@@ -8,15 +8,15 @@ Build a practical estimator that can start with manual quantities and rates, the
 
 ## Core workflow
 
-`Project → Building elements → Quantity takeoff → Unit rates → Amount → BOQ → Total cost`
+`Project → Building elements / Sections → Quantity takeoff → Unit rates / Rate analysis → Amount → BOQ → Estimate version (with markups) → Total cost`
 
 ## Repository structure
 
 ```text
 construction-cost-estimation/
-├── backend/        # FastAPI API
-├── frontend/       # Web application
-├── database/       # Database design and migrations
+├── backend/        # FastAPI API (v0.8.0)
+├── frontend/       # React web application
+├── database/       # PostgreSQL / Supabase schema
 ├── calculations/   # Quantity and cost calculation engine
 ├── boq/            # Bill of Quantities logic
 ├── cost-data/      # Versioned material/labor/equipment rates
@@ -27,41 +27,34 @@ construction-cost-estimation/
 
 ## Current status
 
-**Phase 1 — Foundation**
+**Phase 2/3 — Estimating engine & professional features (in progress)**
 
-- FastAPI backend initialized
-- `GET /health` endpoint
-- Automated health test
-- Initial project modules and documentation structure
+### Implemented
+- FastAPI backend with routers for:
+  - Projects
+  - BOQ sections & items
+  - Cost categories & rates
+  - Rate analysis (components + waste)
+  - Estimate versions (snapshots + overhead / profit / contingency)
+  - Summary, Excel & PDF exports
+- React frontend with Dashboard, Projects, BOQ, Rates and Summary pages
+- Comprehensive database schema (projects, cost_categories, cost_rates, rate_analyses, boq_sections, boq_items, estimate_versions, …)
+- Automated tests with FakeSupabase
+- CI workflow
 
-## Planned roadmap
-
-### Phase 2 — Estimating engine
-- Project and building-element models
-- Quantity takeoff items
-- Unit rates
-- Quantity × rate amount calculations
-- BOQ subtotals and totals
-
-### Phase 3 — Professional estimating
-- Material, labor and equipment rate database
-- Rate analysis
-- Wastage, overhead, profit and contingency
-- Excel/PDF BOQ export
-- Estimate revision/history
-- Cost comparison and dashboards
-
-### Phase 4 — Advanced platform
-- User authentication and project management
+### Still planned / incomplete
+- Full rate analysis UI integration
 - Drawing-assisted quantity takeoff
-- Ethiopia-focused regional cost data
-- AI-assisted estimation
-- Estimate validation and anomaly detection
+- Ethiopia regional cost libraries
+- Authentication & multi-user project sharing
+- AI-assisted estimation & anomaly detection
 
 ## Backend quick start
 
 ```bash
 pip install -r requirements.txt
+export SUPABASE_URL=...
+export SUPABASE_SERVICE_ROLE_KEY=...
 uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000
 ```
 
@@ -75,4 +68,22 @@ Tests:
 
 ```bash
 pytest backend/tests
+```
+
+## Database
+
+See `database/schema.sql` for the full PostgreSQL/Supabase schema covering:
+
+- Projects
+- Cost categories & rates
+- Rate analyses & components
+- BOQ sections & items
+- Estimate versions & snapshot items
+
+## Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
 ```
