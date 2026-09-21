@@ -5,16 +5,12 @@ import {
   listEstimateVersions,
   type EstimateVersion,
 } from "../../api/estimateVersions";
-import { type Project } from "../../api/projects";
+import ProjectSelect from "../../components/ProjectSelect";
+import { useApp } from "../../context/AppContext";
+import { fmtMoney, fmtNum } from "../../lib/format";
 
-type VersionsPageProps = {
-  projects: Project[];
-};
-
-export default function VersionsPage({ projects }: VersionsPageProps) {
-  const [selectedProjectId, setSelectedProjectId] = useState(
-    projects[0]?.id ?? "",
-  );
+export default function VersionsPage() {
+  const { selectedProjectId, selectedProject, pushToast } = useApp();
   const [versions, setVersions] = useState<EstimateVersion[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<EstimateVersion | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,12 +23,6 @@ export default function VersionsPage({ projects }: VersionsPageProps) {
   const [profit, setProfit] = useState("5");
   const [contingency, setContingency] = useState("3");
   const [notes, setNotes] = useState("");
-
-  useEffect(() => {
-    if (projects.length > 0 && !selectedProjectId) {
-      setSelectedProjectId(projects[0].id);
-    }
-  }, [projects, selectedProjectId]);
 
   useEffect(() => {
     if (!selectedProjectId) {
@@ -62,7 +52,6 @@ export default function VersionsPage({ projects }: VersionsPageProps) {
   async function handleCreate() {
     if (!selectedProjectId || !name.trim()) return;
     setSaving(true);
-    setError("");
     try {
       const created = await createEstimateVersion(selectedProjectId, {
         name: name.trim(),
@@ -76,47 +65,25 @@ export default function VersionsPage({ projects }: VersionsPageProps) {
       setName("");
       setNotes("");
       setShowForm(false);
+      pushToast("success", `Version v${created.version_no} created`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create version");
+      pushToast("error", err instanceof Error ? err.message : "Failed to create version");
     } finally {
       setSaving(false);
     }
   }
 
-  const fmt = (n: number) =>
-    n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const currency = selectedProject?.currency || "ETB";
 
   return (
     <div className="stack">
       <div className="pageBar">
         <div>
-          <h2>Estimate Versions</h2>
-          <p className="muted">
-            Snapshot the current BOQ with overhead, profit and contingency. Versions are frozen in time.
-          </p>
+          <h2>Estimate versions</h2>
+          <p className="muted">Freeze the current BOQ with markups for tender or revision history.</p>
         </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <select
-            value={selectedProjectId}
-            onChange={(e) => setSelectedProjectId(e.target.value)}
-            style={{
-              padding: "10px 12px",
-              borderRadius: 9,
-              border: "1px solid #d1d5db",
-              font: "inherit",
-              minWidth: 220,
-            }}
-          >
-            {projects.length === 0 ? (
-              <option value="">No projects</option>
-            ) : (
-              projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))
-            )}
-          </select>
+        <div className="toolbar">
+          <ProjectSelect />
           <button
             type="button"
             className="primary"
@@ -140,31 +107,15 @@ export default function VersionsPage({ projects }: VersionsPageProps) {
           <div className="formGrid">
             <label className="wide">
               Version name *
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Tender submission v1"
-              />
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tender submission v1" />
             </label>
             <label>
               Overhead %
-              <input
-                type="number"
-                min={0}
-                step="0.1"
-                value={overhead}
-                onChange={(e) => setOverhead(e.target.value)}
-              />
+              <input type="number" min={0} step="0.1" value={overhead} onChange={(e) => setOverhead(e.target.value)} />
             </label>
             <label>
               Profit %
-              <input
-                type="number"
-                min={0}
-                step="0.1"
-                value={profit}
-                onChange={(e) => setProfit(e.target.value)}
-              />
+              <input type="number" min={0} step="0.1" value={profit} onChange={(e) => setProfit(e.target.value)} />
             </label>
             <label>
               Contingency %
@@ -178,11 +129,7 @@ export default function VersionsPage({ projects }: VersionsPageProps) {
             </label>
             <label className="wide">
               Notes
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Optional notes for this revision"
-              />
+              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
             </label>
           </div>
           <div className="formActions">
@@ -192,10 +139,10 @@ export default function VersionsPage({ projects }: VersionsPageProps) {
             <button
               type="button"
               className="primary"
-              onClick={() => void handleCreate()}
               disabled={saving || !name.trim()}
+              onClick={() => void handleCreate()}
             >
-              {saving ? "Creating..." : "Create version"}
+              {saving ? "Creating…" : "Create version"}
             </button>
           </div>
         </section>
@@ -208,7 +155,7 @@ export default function VersionsPage({ projects }: VersionsPageProps) {
             <span className="muted">{versions.length}</span>
           </div>
           {loading ? (
-            <div className="emptySmall">Loading...</div>
+            <div className="emptySmall">Loading…</div>
           ) : versions.length === 0 ? (
             <div className="emptySmall">
               <History size={28} />
@@ -222,25 +169,22 @@ export default function VersionsPage({ projects }: VersionsPageProps) {
                   <tr>
                     <th>#</th>
                     <th>Name</th>
-                    <th>Total</th>
+                    <th className="num">Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {versions.map((v) => (
                     <tr
                       key={v.id}
+                      className={selectedVersion?.id === v.id ? "selected" : ""}
                       onClick={() => setSelectedVersion(v)}
-                      style={{
-                        cursor: "pointer",
-                        background:
-                          selectedVersion?.id === v.id ? "#f1f5f9" : undefined,
-                      }}
+                      style={{ cursor: "pointer" }}
                     >
                       <td>v{v.version_no}</td>
                       <td>
                         <strong>{v.name}</strong>
                       </td>
-                      <td>{fmt(Number(v.grand_total))}</td>
+                      <td className="num money">{fmtNum(v.grand_total)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -260,37 +204,35 @@ export default function VersionsPage({ projects }: VersionsPageProps) {
               <h3>
                 v{selectedVersion.version_no} — {selectedVersion.name}
               </h3>
-              {selectedVersion.notes && (
-                <p className="muted">{selectedVersion.notes}</p>
-              )}
+              {selectedVersion.notes && <p className="muted">{selectedVersion.notes}</p>}
               <div className="cards" style={{ gridTemplateColumns: "1fr 1fr", margin: "16px 0" }}>
                 <div className="card">
                   <div>
                     <span>Direct cost</span>
-                    <strong>{fmt(Number(selectedVersion.direct_cost))}</strong>
+                    <strong>{fmtNum(selectedVersion.direct_cost)}</strong>
                   </div>
                 </div>
                 <div className="card">
                   <div>
                     <span>Overhead ({selectedVersion.overhead_percent}%)</span>
-                    <strong>{fmt(Number(selectedVersion.overhead))}</strong>
+                    <strong>{fmtNum(selectedVersion.overhead)}</strong>
                   </div>
                 </div>
                 <div className="card">
                   <div>
                     <span>Profit ({selectedVersion.profit_percent}%)</span>
-                    <strong>{fmt(Number(selectedVersion.profit))}</strong>
+                    <strong>{fmtNum(selectedVersion.profit)}</strong>
                   </div>
                 </div>
                 <div className="card">
                   <div>
                     <span>Contingency ({selectedVersion.contingency_percent}%)</span>
-                    <strong>{fmt(Number(selectedVersion.contingency))}</strong>
+                    <strong>{fmtNum(selectedVersion.contingency)}</strong>
                   </div>
                 </div>
               </div>
               <p style={{ fontSize: 28, fontWeight: 800, margin: "8px 0 16px" }}>
-                {fmt(Number(selectedVersion.grand_total))} ETB
+                {fmtMoney(selectedVersion.grand_total, currency)}
               </p>
               <p className="muted">{selectedVersion.items.length} frozen items</p>
 
@@ -301,7 +243,7 @@ export default function VersionsPage({ projects }: VersionsPageProps) {
                       <tr>
                         <th>Item</th>
                         <th>Description</th>
-                        <th>Amount</th>
+                        <th className="num">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -316,7 +258,7 @@ export default function VersionsPage({ projects }: VersionsPageProps) {
                               </div>
                             )}
                           </td>
-                          <td>{fmt(Number(item.amount))}</td>
+                          <td className="num money">{fmtNum(item.amount)}</td>
                         </tr>
                       ))}
                     </tbody>
