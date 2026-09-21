@@ -27,7 +27,7 @@ export async function listSections(projectId: string): Promise<BOQSection[]> {
 
 export async function createSection(
   projectId: string,
-  payload: Partial<BOQSection>,
+  payload: { name: string; code?: string | null; description?: string | null; sort_order?: number },
 ): Promise<BOQSection> {
   return apiFetch<BOQSection>(`/projects/${projectId}/boq/sections`, {
     method: "POST",
@@ -47,4 +47,8 @@ export async function createBOQ(
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export async function deleteBOQItem(projectId: string, itemId: string): Promise<void> {
+  await apiFetch<void>(`/projects/${projectId}/boq/${itemId}`, { method: "DELETE" });
 }
