@@ -9,7 +9,8 @@ React + Vite + TypeScript UI for the Construction Cost Estimation system.
 - **BOQ** – quantity takeoff items (manual rate or from rate analysis)
 - **Rates** – material / labor / equipment unit rates
 - **Rate Analysis** – composite rates built from components + waste
-- **Summary** – direct cost + overhead / profit / contingency
+- **Estimate Versions** – frozen BOQ snapshots with overhead / profit / contingency
+- **Summary** – live cost summary with adjustable markups
 
 ## Run
 
@@ -24,3 +25,10 @@ Set the API base URL if needed:
 ```bash
 export VITE_API_BASE_URL=http://localhost:8000
 ```
+
+## Deploy (Vercel)
+
+- Root Directory: `frontend`
+- Build: `npm run build`
+- Output: `dist`
+- Env: `VITE_API_BASE_URL=https://your-api-url`
