@@ -1,19 +1,12 @@
 import { useEffect, useState } from "react";
 import { Plus, CircleDollarSign } from "lucide-react";
 import { createRate, listRates, type CostRate } from "../../api/rates";
-import { apiFetch } from "../../api/client";
+import { listCategories, type Category } from "../../api/categories";
+import { useApp } from "../../context/AppContext";
+import { fmtNum } from "../../lib/format";
 
-type Category = {
-  id: string;
-  name: string;
-  description?: string | null;
-};
-
-type RatesPageProps = {
-  projectsCount?: number;
-};
-
-export default function RatesPage({ projectsCount = 0 }: RatesPageProps) {
+export default function RatesPage() {
+  const { pushToast } = useApp();
   const [rates, setRates] = useState<CostRate[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -28,23 +21,14 @@ export default function RatesPage({ projectsCount = 0 }: RatesPageProps) {
   const [rate, setRate] = useState("0");
   const [region, setRegion] = useState("Addis Ababa");
 
-  useEffect(() => {
-    void loadAll();
-  }, []);
-
   async function loadAll() {
     setLoading(true);
     setError("");
     try {
-      const [rateRows, categoryRows] = await Promise.all([
-        listRates(),
-        apiFetch<Category[]>("/cost-categories"),
-      ]);
+      const [rateRows, categoryRows] = await Promise.all([listRates(), listCategories()]);
       setRates(rateRows);
       setCategories(categoryRows);
-      if (categoryRows.length > 0 && !categoryId) {
-        setCategoryId(categoryRows[0].id);
-      }
+      if (categoryRows.length && !categoryId) setCategoryId(categoryRows[0].id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load rates");
     } finally {
@@ -52,10 +36,14 @@ export default function RatesPage({ projectsCount = 0 }: RatesPageProps) {
     }
   }
 
+  useEffect(() => {
+    void loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleCreateRate() {
     if (!categoryId || !code.trim() || !name.trim()) return;
     setSaving(true);
-    setError("");
     try {
       const created = await createRate({
         category_id: categoryId,
@@ -72,8 +60,9 @@ export default function RatesPage({ projectsCount = 0 }: RatesPageProps) {
       setUnit("m³");
       setRate("0");
       setShowForm(false);
+      pushToast("success", "Cost rate created");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create rate");
+      pushToast("error", err instanceof Error ? err.message : "Failed to create rate");
     } finally {
       setSaving(false);
     }
@@ -83,10 +72,8 @@ export default function RatesPage({ projectsCount = 0 }: RatesPageProps) {
     <div className="stack">
       <div className="pageBar">
         <div>
-          <h2>Cost Rates</h2>
-          <p className="muted">
-            Unit rates for materials, labor and equipment. Projects tracked: {projectsCount}.
-          </p>
+          <h2>Cost rates</h2>
+          <p className="muted">Material, labor and equipment unit rates by region.</p>
         </div>
         <button type="button" className="primary" onClick={() => setShowForm((v) => !v)}>
           <Plus size={16} />
@@ -102,18 +89,9 @@ export default function RatesPage({ projectsCount = 0 }: RatesPageProps) {
           <div className="formGrid">
             <label>
               Category *
-              <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                style={{
-                  padding: "11px 12px",
-                  borderRadius: 9,
-                  border: "1px solid #d1d5db",
-                  font: "inherit",
-                }}
-              >
+              <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
                 {categories.length === 0 ? (
-                  <option value="">No categories — create some first</option>
+                  <option value="">Create categories first</option>
                 ) : (
                   categories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -125,19 +103,11 @@ export default function RatesPage({ projectsCount = 0 }: RatesPageProps) {
             </label>
             <label>
               Code *
-              <input
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="e.g. CEM-OPC"
-              />
+              <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="CEM-OPC" />
             </label>
             <label className="wide">
               Name *
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Ordinary Portland Cement"
-              />
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ordinary Portland Cement" />
             </label>
             <label>
               Unit
@@ -145,21 +115,11 @@ export default function RatesPage({ projectsCount = 0 }: RatesPageProps) {
             </label>
             <label>
               Rate (ETB)
-              <input
-                type="number"
-                step="0.01"
-                min={0}
-                value={rate}
-                onChange={(e) => setRate(e.target.value)}
-              />
+              <input type="number" step="0.01" min={0} value={rate} onChange={(e) => setRate(e.target.value)} />
             </label>
             <label>
               Region
-              <input
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                placeholder="Addis Ababa"
-              />
+              <input value={region} onChange={(e) => setRegion(e.target.value)} />
             </label>
           </div>
           <div className="formActions">
@@ -169,10 +129,10 @@ export default function RatesPage({ projectsCount = 0 }: RatesPageProps) {
             <button
               type="button"
               className="primary"
-              onClick={() => void handleCreateRate()}
               disabled={saving || !categoryId || !code.trim() || !name.trim()}
+              onClick={() => void handleCreateRate()}
             >
-              {saving ? "Saving..." : "Add rate"}
+              {saving ? "Saving…" : "Add rate"}
             </button>
           </div>
         </section>
@@ -182,17 +142,16 @@ export default function RatesPage({ projectsCount = 0 }: RatesPageProps) {
         <div className="tableHead">
           <h3>Unit rates</h3>
           <button type="button" className="secondary" onClick={() => void loadAll()} disabled={loading}>
-            {loading ? "Refreshing..." : "Refresh"}
+            {loading ? "Refreshing…" : "Refresh"}
           </button>
         </div>
-
         {loading && rates.length === 0 ? (
-          <div className="emptySmall">Loading rates...</div>
+          <div className="emptySmall">Loading rates…</div>
         ) : rates.length === 0 ? (
           <div className="emptySmall">
             <CircleDollarSign size={28} />
             <strong>No rates yet</strong>
-            <span>Add material, labor or equipment rates to use in rate analyses and BOQs.</span>
+            <span>Add categories first, then material / labor / equipment rates.</span>
           </div>
         ) : (
           <div className="tableWrap">
@@ -202,7 +161,7 @@ export default function RatesPage({ projectsCount = 0 }: RatesPageProps) {
                   <th>Code</th>
                   <th>Name</th>
                   <th>Unit</th>
-                  <th>Rate</th>
+                  <th className="num">Rate</th>
                   <th>Currency</th>
                   <th>Region</th>
                 </tr>
@@ -213,11 +172,7 @@ export default function RatesPage({ projectsCount = 0 }: RatesPageProps) {
                     <td>{r.code}</td>
                     <td>{r.name}</td>
                     <td>{r.unit}</td>
-                    <td>
-                      {Number(r.rate).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
-                    </td>
+                    <td className="num money">{fmtNum(r.rate)}</td>
                     <td>{r.currency}</td>
                     <td>{r.region || "—"}</td>
                   </tr>
